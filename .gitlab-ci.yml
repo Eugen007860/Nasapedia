@@ -1,0 +1,35 @@
+stages:
+  - beautify
+  - minify
+  - deploy
+
+beautify_code:
+  image: node:latest
+  stage: beautify
+  script:
+    - npm install -g js-beautify
+    - find . -name "*.js" -exec js-beautify -r {} \;
+    - find . -name "*.html" -exec js-beautify -r {} \;  # Lifting del HTML
+    - find . -name "*.php" -exec php -l {} \;  # Lifting del PHP
+    - find . -name "*.css" -exec npm install -g css-beautify \; -exec css-beautify -r {} \;  # Lifting del CSS
+  tags:
+    - guacamole
+
+minify_code:
+  image: node:latest
+  stage: minify
+  script:
+    - npm install -g html-minifier terser clean-css-cli
+    - find . -name "*.html" -exec html-minifier --input-dir {} --output-dir {} \;
+    - find . -name "*.js" -exec terser --compress --mangle -o {} -- {} \;
+    - find . -name "*.css" -exec cleancss -o {} {} \;
+  tags:
+    - guacamole
+
+deploy:
+  stage: deploy
+  script:
+    - mkdir -p /var/www/html/iw_group/grupo-pangolin
+    - cp -r . /var/www/html/iw_group/grupo-pangolin
+  tags:
+    - guacamole
